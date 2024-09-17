@@ -30,8 +30,8 @@
 				"smilerobotics.urdf",
 				//"streetsidesoftware.code-spell-checker",
 				"twxs.cmake",
-				"zachflower.uncrustify",
-                "github.copilot"  // GitHub Copilot extension
+				"zachflower.uncrustify"
+                // "github.copilot"  // GitHub Copilot extension... Not necessary? Is imported from local vscode extensions?
 			],
 			"settings": {
 				"python.autoComplete.extraPaths": [

@@ -11,7 +11,7 @@ FROM osrf/ros:${ROS_DISTRO}-desktop-full as base
 ENV ROS_DISTRO=${ROS_DISTRO}
 SHELL ["/bin/bash", "-c"]
 
-# Install bare minimum system dependencies
+# Install bare minimum system dependencies - can add --no-install-recommends to reduce size
 RUN apt-get update && apt-get install -y \
   cmake \
   g++ \
@@ -29,21 +29,31 @@ RUN apt-get update && apt-get install -y \
 # Minimal Python dependencies (only core libraries)
 RUN pip3 install --upgrade pip \
 && pip3 install \
-  numpy \
   rospkg \
   catkin_pkg
 
 # Workspace setup (underlay/base that is not to be modified)
 RUN mkdir -p /underlay_ws/src
 WORKDIR /underlay_ws/src
-COPY dependencies.repos .
-RUN vcs import < dependencies_underlay.repos \
-&& rosdep update \
-&& rosdep install -y --from-paths src --ignore-src
+COPY dependencies_underlay.repos .
 
-RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
-&& catkin init \
-&& catkin build --no-status --parallel $(nproc)
+# Import repositories if the file is not empty
+RUN if [ -s dependencies_underlay.repos ]; then \
+    vcs import < dependencies_underlay.repos; \
+else \
+    echo "No repositories to import"; \
+fi
+
+# Initialize Catkin workspace
+WORKDIR /underlay_ws/src
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
+    catkin init
+
+# Build the base Catkin workspace
+RUN cd /underlay_ws \
+ && source /opt/ros/${ROS_DISTRO}/setup.bash \
+ && rosdep install -y --from-paths src --ignore-src \
+ && catkin build
 
 # Remove display warnings
 RUN mkdir /tmp/runtime-root
@@ -65,30 +75,28 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 ###############################################################################################
 FROM base as overlay
 
-# Install additional apt packages (project-specific)
+# Install additional apt packages (project-specific) - can add --no-install-recommends to reduce size
 RUN apt-get update && apt-get install -y \
-  ros-${ROS_DISTRO}-cv-bridge \
+  ros-${ROS_DISTRO}-realsense2-camera \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
 # Install additional Python dependencies (project-specific)
-RUN pip3 install scipy
+RUN pip3 install numpy
 
-RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
-&& rosdep install --from-paths src --ignore-src -r -y
-
-# Create the overlay workspace
-RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
-&& mkdir -p /overlay_ws/src \
-&& cd /overlay_ws \
-&& catkin init
-
-# Copy the source code (of submodules) into the overlay workspace
+# Workspace setup (this is to be modified frequently)
+RUN mkdir -p /overlay_ws/src
 COPY ../packages/ /overlay_ws/src
 
-# Build the overlay workspace
-RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
-&& catkin build --no-status --parallel $(nproc)
+# Initialize Catkin workspace
+WORKDIR /overlay_ws/src
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
+    catkin init
+# Build the base Catkin workspace
+RUN cd /overlay_ws \
+ && source /opt/ros/${ROS_DISTRO}/setup.bash \
+ && rosdep install -y --from-paths src --ignore-src \
+ && catkin build
 
 # Run entrypoint
 WORKDIR /overlay_ws
@@ -102,23 +110,22 @@ ENTRYPOINT ["/entrypoint.sh"]
 ################################################################################################
 FROM overlay as dev
 
-# Install additional apt packages (project-specific)
+# Install additional apt packages (development-specific) - can add --no-install-recommends to reduce size
 RUN apt-get update && apt-get install -y \
   gdb \
+  gdbserver \
+  nano \
+  usbutils \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-# Install additional Python dependencies (project-specific)
-RUN pip3 install scikit-learn
+# Install additional Python dependencies (development-specific)
+# RUN pip3 install 
 
 # Dev container arguments
 ARG USERNAME=devuser
 ARG UID=1000
 ARG GID=${UID}
-
-# Install extra tools for development
-RUN apt-get update && apt-get install -y --no-install-recommends \
- gdb gdbserver nano
 
 # Create new user and home directory
 RUN groupadd --gid $GID $USERNAME \

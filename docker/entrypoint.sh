@@ -1,8 +1,6 @@
 #!/bin/bash
 # Basic entrypoint for ROS / Catkin Docker containers
 
-set -e  # Exit immediately if a command exits with a non-zero status
-
 # Source ROS setup if available
 if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then
   source /opt/ros/${ROS_DISTRO}/setup.bash
@@ -28,17 +26,4 @@ else
   echo "Overlay workspace not found. Proceeding without it."
 fi
 
-
-# Allow executing custom commands directly when running the container
-if [ "$1" == "bash" ]; then
-  exec /bin/bash
-elif [ "$1" == "roslaunch" ]; then
-  shift  # Remove 'roslaunch' from the arguments list
-  exec roslaunch "$@"
-elif [ "$1" == "rosrun" ]; then
-  shift  # Remove 'rosrun' from the arguments list
-  exec rosrun "$@"
-else
-  # Default to running whatever command was passed in
-  exec "$@"
-fi
+exec "$@"
