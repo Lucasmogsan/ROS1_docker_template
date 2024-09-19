@@ -46,6 +46,19 @@ Remove everything, including stopped containers and all unused images (not just 
 docker system prune -a
 ```
 
+# Update user permissions (to access USB)
+In the dockerfile a user inheriting the host permissions is applied.
+Therefore, if your host computer does not have access to the USB (rw permission for `/dev/bus/usb/$#BUS$/$#DEVICE$`) this needs to be created.
+To add the group `plugdev` to have rw acess a script is made.
+1. Make the script executable:
+    ```bash
+    chmod +x setup_usb_rules.sh
+    ```
+1. Run the script
+    ```bash
+    sudo ./setup_usb_rules.sh
+    ```
+
 # Files
 - .devcontainer: vscode setup in container
 - Docker: Dockerfile and entrypoint
