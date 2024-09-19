@@ -54,6 +54,7 @@ services:
     volumes:
       # Mount the source code
       - ./packages:/overlay_ws/src/:rw 
+      - /dev:/dev
 
     user: ${USERNAME:-devuser}
 

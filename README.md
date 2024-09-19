@@ -3,7 +3,7 @@
 
 # Using this for the first time:
 1. Make a repository based on this template.
-1. Add the submodules
+1. Add the submodules to packages folder (and remove placeholder)
 1. Update the overlay and dev dependencied (apt and pip) to suit your project.
 1. Update the `.env` file.
 1. Make sure the entrypoint permissions are set: `chmod +x docker/entrypoint.sh`
