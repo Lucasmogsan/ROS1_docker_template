@@ -15,8 +15,15 @@ NB:
 - In the overlay image the submodules (in packages folder) are copied over (from the Dockerfile)
 - In the dev image the submodules (in packages folder) are a shared volume (from the docker-compose file)
 
+# Files
+- .devcontainer: vscode setup in container
+- Docker: Dockerfile and entrypoint
+- .env: Environment variables to be changed. Particularly important for ROS1 (ros master, nodes IP etc.)
+- dependencies.repos: Repositories that are used, but not to be modified (e.g. drivers, tools etc)
+- docker-compose: Compose file
 
-## Docker (How to run docker environment)
+
+# Docker (How to run docker environment)
 
 Install docker and docker compose
 
@@ -45,26 +52,6 @@ Remove everything, including stopped containers and all unused images (not just 
 ```bash
 docker system prune -a
 ```
-
-# Update user permissions (to access USB)
-In the dockerfile a user inheriting the host permissions is applied.
-Therefore, if your host computer does not have access to the USB (rw permission for `/dev/bus/usb/$#BUS$/$#DEVICE$`) this needs to be created.
-To add the group `plugdev` to have rw acess a script is made.
-1. Make the script executable:
-    ```bash
-    chmod +x setup_usb_rules.sh
-    ```
-1. Run the script
-    ```bash
-    sudo ./setup_usb_rules.sh
-    ```
-
-# Files
-- .devcontainer: vscode setup in container
-- Docker: Dockerfile and entrypoint
-- .env: Environment variables to be changed. Particularly important for ROS1 (ros master, nodes IP etc.)
-- dependencies.repos: Repositories that are used, but not to be modified (e.g. drivers, tools etc)
-- docker-compose: Compose file
 
 # Submodules
 Clone the repo with submodules:

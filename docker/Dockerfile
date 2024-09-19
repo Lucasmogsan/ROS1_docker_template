@@ -77,9 +77,7 @@ FROM base as overlay
 
 # Install additional apt packages (project-specific) - can add --no-install-recommends to reduce size
 RUN apt-get update && apt-get install -y \
-  # ros-${ROS_DISTRO}-realsense2-camera \
-  ros-${ROS_DISTRO}-librealsense2* \
-  ros-${ROS_DISTRO}-realsense2-* \
+  nano \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -140,10 +138,6 @@ RUN groupadd --gid $GID $USERNAME \
 # Add user to dialout group (for serial communication)
 RUN getent group dialout || groupadd --gid 20 dialout \
  && usermod -a -G dialout ${USERNAME}
-
-# Add user to plugdev group (for USB devices)
- RUN getent group plugdev || groupadd --gid 46 plugdev \
- && usermod -a -G plugdev ${USERNAME}
 
 # Set the ownership of the overlay workspace to the new user
 RUN chown -R ${UID}:${GID} /overlay_ws/ /underlay_ws/
