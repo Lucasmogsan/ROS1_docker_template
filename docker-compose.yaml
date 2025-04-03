@@ -11,20 +11,30 @@ services:
     # Interactive shell
     stdin_open: true
     tty: true
-    # Networking and IPC for ROS 2
+    # Networking and IPC
     network_mode: host
     ipc: host
     # Needed to display graphical applications
-    privileged: true  # This allows the container full access to the host devices.
     environment:
       # Allows graphical programs in the container.
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
+      - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
+    runtime: nvidia
+    privileged: true
     volumes:
       # Allows graphical programs in the container.
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
+      - /dev/dri:/dev/dri:rw
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   # Overlay image containing the example source code.
   overlay:
@@ -55,6 +65,8 @@ services:
       # Mount the source code
       - ./packages:/overlay_ws/src/:rw 
       - /dev:/dev
+      - ${DATA_DIR_LOCAL}:/overlay_ws/data/:rw
+      - ${OUTPUT_DIR_LOCAL}:/overlay_ws/output/:rw
 
     user: ${USERNAME:-devuser}
 
